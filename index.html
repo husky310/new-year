@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>2026 开启新年心愿</title>
+    <link href="https://fonts.googleapis.com/css2?family=Ma+Shan+Zheng&family=Zhi+Mang+Xing&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <style>
+        :root {
+            /* 根据你的 card.jpg 图片比例微调了宽高 */
+            --card-width: 380px; 
+            --card-height: 280px;
+        }
+
+        body, html {
+            margin: 0; padding: 0; width: 100%; height: 100%;
+            overflow: hidden; background: #020509;
+            font-family: 'Ma Shan Zheng', cursive;
+        }
+
+        /* --- 背景星空 --- */
+        .sky-container {
+            position: fixed; width: 100%; height: 100%;
+            background: radial-gradient(circle at center, #0a192f 0%, #020509 100%);
+            z-index: 1;
+        }
+        .star {
+            position: absolute; background: white; border-radius: 50%;
+            animation: twinkle var(--duration) infinite ease-in-out;
+        }
+        @keyframes twinkle { 0%, 100% { opacity: 0.3; transform: scale(1); } 50% { opacity: 1; transform: scale(1.2); } }
+
+        .stage {
+            position: absolute; top: 50%; left: 50%;
+            transform: translate(-50%, -50%); z-index: 10; text-align: center;
+        }
+
+        /* --- 贺卡容器 --- */
+        .card-container { width: var(--card-width); height: var(--card-height); perspective: 2000px; cursor: pointer; }
+        .card-inner { width: 100%; height: 100%; position: relative; transform-style: preserve-3d; transition: transform 1.5s cubic-bezier(0.6, 0, 0.4, 1.2); }
+        
+        /* --- 贺卡封面 (使用你的 card.jpg) --- */
+        .card-cover { 
+            position: absolute; width: 100%; height: 100%; 
+            background-image: url('card.png'); 
+            background-size: cover; 
+            background-position: center;
+            background-repeat: no-repeat;
+            background-color: #1a1a1a; 
+            border-radius: 12px; 
+            border: 4px solid #f0c419; /* 金色细边框匹配图片风格 */
+            box-sizing: border-box; 
+            transform-origin: left; 
+            transition: transform 1.5s cubic-bezier(0.4, 0, 0.2, 1); 
+            z-index: 5; 
+            backface-visibility: hidden; 
+            box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+        }
+
+        /* --- 贺卡底座 (内页) --- */
+        .card-base { 
+            position: absolute; width: 100%; height: 100%; 
+            background: #fffdf5; 
+            border-radius: 12px; border: 4px solid #fff; box-sizing: border-box; 
+            box-shadow: 10px 20px 40px rgba(0,0,0,0.5); 
+            display: flex; flex-direction: column; justify-content: center; padding: 20px; z-index: 1; 
+        }
+        
+        /* 翻开交互 */
+        .card-container.open .card-cover { transform: rotateY(-140deg); }
+        /* 这里的位移根据宽度做了微调 */
+        .card-container.open .card-inner { transform: translateX(30%); }
+
+        .card-base h2 { font-size: 22px; color: #d32f2f; margin: 0 0 5px 0; }
+        .card-base p { font-family: 'Zhi Mang Xing', cursive; font-size: 18px; line-height: 1.4; color: #333; text-align: left; margin: 5px 0; }
+
+        .next-hint { 
+            position: absolute; bottom: 15px; right: 15px; 
+            font-size: 24px; color: #d32f2f; display: none; 
+            animation: arrowMove 0.8s infinite alternate; 
+        }
+        @keyframes arrowMove { from { transform: translateX(0); } to { transform: translateX(10px); } }
+
+        /* --- 许愿区 --- */
+        .wish-section { display: none; opacity: 0; }
+        .paper { 
+            background: #fff9c4; width: 340px; padding: 40px; 
+            border-radius: 10px; box-shadow: 0 10px 30px rgba(0,0,0,0.3); 
+            position: relative; border-left: 15px solid #ffeb3b;
+        }
+        .paper h2 { font-family: 'Ma Shan Zheng'; color: #5d4037; }
+        .input-group input { 
+            width: 90%; padding: 12px; margin: 15px 0; border: none; 
+            border-bottom: 2px dashed #8b4513; background: transparent; 
+            font-family: 'Ma Shan Zheng'; font-size: 18px; text-align: center; outline: none; 
+        }
+        .btn { 
+            background: #d32f2f; color: white; padding: 12px 35px; 
+            border: none; border-radius: 50px; cursor: pointer; 
+            font-family: 'Ma Shan Zheng'; font-size: 18px; transition: 0.3s;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+        }
+        .btn:hover { transform: translateY(-3px); box-shadow: 0 6px 15px rgba(0,0,0,0.3); }
+
+        /* --- 火箭 --- */
+        .rocket-container { position: absolute; bottom: -150px; left: 50%; transform: translateX(-50%); width: 80px; height: 120px; z-index: 100; }
+        .css-rocket { width: 60px; height: 100px; border-radius: 50% 50% 10% 10%; position: relative; margin: 0 auto; background: linear-gradient(to right, #e0e0e0 50%, #f5f5f5 50%); }
+        .css-rocket::before { content:''; position: absolute; top: 20px; left: 15px; width: 30px; height: 30px; background: #333; border-radius: 50%; border: 3px solid #d32f2f; }
+        .css-rocket::after { content:''; position: absolute; bottom: 0; left: -15px; width: 90px; height: 30px; background: #d32f2f; z-index: -1; border-radius: 50% 50% 0 0; }
+
+        /* --- 结尾 --- */
+        .finale-text { display: none; opacity: 0; width: 100%; text-shadow: 0 0 20px rgba(255,215,0, 0.6); }
+        .finale-text h1 { font-size: 3.5rem; color: #ffd700; margin: 15px 0; }
+        .finale-text p { font-size: 1.4rem; color: #fff; }
+    </style>
+</head>
+<body>
+
+    <audio id="bgm" src="bgm.mp3" loop></audio>
+    <div class="sky-container" id="sky"></div>
+
+    <div class="stage" id="cardStage">
+        <div class="card-container" id="cardContainer" onclick="openCard()">
+            <div class="card-inner">
+                <div class="card-cover"></div>
+                
+                <div class="card-base">
+                    <h2> 2026 新年快乐丫哈哈哈哈：</h2>
+                    <p>
+                        愿你在新的一年里，<br>
+                        平安喜乐，万事胜意。<br>
+                        所有的心愿，都将随着这张<br>
+                        手绘的星图，飞向属于你的星河。<br>
+                        <div class="signature">-by Haiqi</div> 
+                    </p>
+                    <div class="next-hint" id="nextHint" onclick="goToWish(event)">→</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="stage wish-section" id="wishStage">
+        <div class="paper" id="paperBox">
+            <div id="stepWish">
+                <h2>✨ 你的新年愿望</h2>
+                <div class="input-group"><input type="text" id="wishInput" placeholder="写下愿望..." autocomplete="off"></div>
+                <button class="btn" onclick="toSign()">确认愿望</button>
+            </div>
+            <div id="stepSign" style="display: none;">
+                <h2>✍️ 署名</h2>
+                <div class="input-group"><input type="text" id="nameInput" placeholder="你的名字" autocomplete="off"></div>
+                <button class="btn" onclick="launchRocketAction()">确认并发射</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="rocket-container" id="rocket"><div class="css-rocket"></div></div>
+    <div class="stage finale-text" id="finalStage"></div>
+
+    <script>
+        // 星空初始化保持不变
+        const sky = document.getElementById('sky');
+        for (let i = 0; i < 150; i++) {
+            const star = document.createElement('div');
+            star.className = 'star';
+            const size = Math.random() * 3 + 'px';
+            star.style.width = size; star.style.height = size;
+            star.style.left = Math.random() * 100 + '%';
+            star.style.top = Math.random() * 100 + '%';
+            star.style.setProperty('--duration', Math.random() * 3 + 2 + 's');
+            sky.appendChild(star);
+        }
+        gsap.to(".star", {
+            y: "100vh", duration: () => Math.random() * 30 + 30, repeat: -1, ease: "none",
+            modifiers: { y: gsap.utils.unitize(v => parseFloat(v) % window.innerHeight) }
+        });
+
+        const bgm = document.getElementById('bgm');
+
+        function openCard() {
+            bgm.play().catch(() => {});
+            const container = document.getElementById('cardContainer');
+            if(!container.classList.contains('open')) {
+                container.classList.add('open');
+                setTimeout(() => { document.getElementById('nextHint').style.display = 'block'; }, 1500);
+            }
+        }
+
+        function goToWish(e) {
+            e.stopPropagation();
+            gsap.to("#cardStage", { opacity: 0, scale: 0.8, duration: 1, onComplete: () => {
+                document.getElementById('cardStage').style.display = 'none';
+                document.getElementById('wishStage').style.display = 'block';
+                gsap.to("#wishStage", { opacity: 1, duration: 0.6 });
+            }});
+        }
+
+        function toSign() {
+            if(!document.getElementById('wishInput').value.trim()) return alert("愿望还是要写一下的~");
+            gsap.to("#stepWish", { opacity: 0, duration: 0.3, onComplete: () => {
+                document.getElementById('stepWish').style.display = 'none';
+                document.getElementById('stepSign').style.display = 'block';
+                gsap.from("#stepSign", { opacity: 0, y: 10, duration: 0.5 });
+            }});
+        }
+
+        function launchRocketAction() {
+            const name = document.getElementById('nameInput').value.trim();
+            const wish = document.getElementById('wishInput').value.trim();
+            if(!name) return alert("请留下大名！");
+
+            const paperBox = document.getElementById('paperBox');
+            const rocket = document.getElementById('rocket');
+            const tl = gsap.timeline();
+
+            tl.to(paperBox, { scaleY: 0.1, scaleX: 0.1, y: 300, opacity: 0, duration: 1.5, ease: "power2.in" })
+              .to(rocket, { bottom: "20%", duration: 1.2, ease: "back.out(1.5)" }, "-=0.8")
+              .to(rocket, { x: "+=3", duration: 0.1, repeat: 10, yoyo: true })
+              .to(rocket, { 
+                bottom: "150%", 
+                duration: 2, 
+                ease: "power4.in",
+                onComplete: () => {
+                    showFinal(name, wish);
+                    launchFireworks(); 
+                }
+              });
+        }
+
+        function showFinal(name, wish) {
+            const final = document.getElementById('finalStage');
+            final.innerHTML = `
+                <p style="font-size:22px; color:#fff; letter-spacing:2px;"> 2026 最牛的： <strong>${name}</strong> </p>
+                <h1>新年快乐</h1>
+                <p style="font-size:36px; font-family:'Zhi Mang Xing'; color:#ffd700; margin: 25px 0;">“${wish}”</p>
+                <p style="color:#ff69b4; font-size:24px;">你的愿望一定会实现！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！</p>
+            `;
+            final.style.display = 'block';
+            gsap.to(final, { opacity: 1, duration: 2 });
+        }
+
+        function launchFireworks() {
+            var duration = 8 * 1000; 
+            var animationEnd = Date.now() + duration;
+            var defaults = { startVelocity: 35, spread: 360, ticks: 60, zIndex: 9999 }; 
+
+            var interval = setInterval(function() {
+                var timeLeft = animationEnd - Date.now();
+                if (timeLeft <= 0) return clearInterval(interval);
+                var particleCount = 50 * (timeLeft / duration);
+                confetti(Object.assign({}, defaults, { 
+                    particleCount, 
+                    origin: { x: Math.random(), y: Math.random() - 0.2 } 
+                }));
+            }, 250);
+        }
+    </script>
+</body>
+</html>
